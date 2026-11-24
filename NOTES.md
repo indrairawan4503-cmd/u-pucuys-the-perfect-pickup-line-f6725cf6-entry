@@ -15,3 +15,6 @@ The agent predicts text — turn prediction into charm. It finished the person's
 
 - Character count: 159 (within 120–190 target, ≤200 hard cap)
 - Title: Already Said Yes
+
+## Revision notes
+`main.py` now gates the entry with `validate_entry()` before any write: it checks the line is 1–200 characters, a single line with no newline inside, has no leading/trailing whitespace, and contains no double spaces, exiting with a message naming the exact rule violated if any check fails — so a bad edit can never silently reach the grader. `write_entry()` is now atomic: it writes the full text to a temp file in the same directory, flushes and fsyncs it, then `os.replace()`s it into place, so a crash mid-write can never leave a half-written `entry.txt`. The entry line itself is unchanged (still 159 characters), and the deterministic /output-first write plus the best-effort repo-root copy (try/except OSError) are preserved.

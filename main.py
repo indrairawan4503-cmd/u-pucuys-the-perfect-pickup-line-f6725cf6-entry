@@ -8,12 +8,28 @@ def resolve_output_path():
         return os.path.join(out, "entry.txt")
     return out
 
+def validate_entry(text):
+    if not 1 <= len(text) <= 200:
+        raise SystemExit(f"entry validation failed: length must be 1-200 characters, got {len(text)}")
+    if "\n" in text or "\r" in text:
+        raise SystemExit("entry validation failed: entry must be a single line (no newline character inside)")
+    if text != text.strip():
+        raise SystemExit("entry validation failed: entry must have no leading/trailing whitespace")
+    if "  " in text:
+        raise SystemExit("entry validation failed: entry must have no double spaces")
+
 def write_entry(path, text):
-    os.makedirs(os.path.dirname(path) or ".", exist_ok=True)
-    with open(path, "w", encoding="utf-8") as f:
+    directory = os.path.dirname(path) or "."
+    os.makedirs(directory, exist_ok=True)
+    tmp_path = path + ".tmp"
+    with open(tmp_path, "w", encoding="utf-8") as f:
         f.write(text)
+        f.flush()
+        os.fsync(f.fileno())
+    os.replace(tmp_path, path)
 
 def main():
+    validate_entry(LINE)
     text = LINE + "\n"
     write_entry(resolve_output_path(), text)
     try:
